@@ -37,7 +37,16 @@ Vagrant.configure("2") do |config|
      chmod 0600 ~/.ssh/authorized_keys
      ssh -oStrictHostKeyChecking=no localhost ls
      ssh -oStrictHostKeyChecking=no 0.0.0.0 ls
-     
+     useradd -m hadoop
+     mkdir /home/hadoop/.ssh && chown hadoop /home/yarn/.ssh
+     cat ~/.ssh/id_rsa.pub >> /home/hadoop/.ssh/authorized_keys
+     cat ~/.ssh/id_rsa >> /home/hadoop/.ssh/id_rsa
+     chmod 0600 /home/hadoop/.ssh/*
+     chown hadoop -R /home/hadoop/.ssh
+     ssh -oStrictHostKeyChecking=no hadoop@localhost ls
+     ssh -oStrictHostKeyChecking=no hadoop@0.0.0.0 ls
+     ssh hadoop@localhost "ssh -oStrictHostKeyChecking=no hadoop@localhost ls; ssh -oStrictHostKeyChecking=no hadoop@0.0.0.0 ls"
+     usermod -aG docker hadoop
      
      # Configure Environment Variable of Hadoop
      echo "export HADOOP_HOME=\"/usr/local/hadoop\"" > /etc/profile.d/hadoop.sh
@@ -48,6 +57,7 @@ Vagrant.configure("2") do |config|
      tar -xzvf hadoop-2.9.1.tar.gz
      sudo mv hadoop-2.9.1 /usr/local/hadoop
      echo "export JAVA_HOME=\$(readlink -f /usr/bin/java | sed \"s:bin/java::\")" >>  ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
+     chown hadoop -R ${HADOOP_HOME}
 
      # Configure HDFS
      echo "<configuration>" > ${HADOOP_HOME}/etc/hadoop/core-site.xml
@@ -64,10 +74,10 @@ Vagrant.configure("2") do |config|
      echo "</configuration>" >> ${HADOOP_HOME}/etc/hadoop/hdfs-site.xml
 
      # Format HDFS
-     hdfs namenode -format
+     ssh hadoop@localhost "hdfs namenode -format"
 
      # Start HDFS     
-     ${HADOOP_HOME}/sbin/start-dfs.sh
+     ssh hadoop@localhost "${HADOOP_HOME}/sbin/start-dfs.sh"
 
      # Configure Yarn
      echo "<configuration>" > ${HADOOP_HOME}/etc/hadoop/mapred-site.xml
@@ -177,7 +187,8 @@ Vagrant.configure("2") do |config|
      echo "</configuration>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
 
      # Start Yarn
-     ${HADOOP_HOME}/sbin/start-yarn.sh
+     
+     ssh hadoop@localhost "${HADOOP_HOME}/sbin/start-yarn.sh"
      
    SHELL
 end
