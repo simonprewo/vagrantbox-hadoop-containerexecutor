@@ -162,7 +162,7 @@ Vagrant.configure("2") do |config|
      echo "    </description>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
      echo "  </property>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
 
-     echo "  <property>
+     echo "  <property>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
      echo "    <name>yarn.nodemanager.runtime.linux.docker.capabilities</name>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
      echo "    <value>CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE</value>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
      echo "    <description>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
