@@ -156,7 +156,7 @@ Vagrant.configure("2") do |config|
      echo "  <property>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
      echo "    <name>yarn.nodemanager.runtime.linux.docker.privileged-containers.acl</name>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
      echo "    <value></value>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
-     echo "    <description>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
+     echo "    <description>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
      echo "      Optional. A comma-separated list of users who are allowed to request" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
      echo "      privileged contains if privileged containers are allowed." >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
      echo "    </description>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
