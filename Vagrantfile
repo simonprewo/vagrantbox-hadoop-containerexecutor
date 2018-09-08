@@ -74,7 +74,7 @@ Vagrant.configure("2") do |config|
      echo "</configuration>" >> ${HADOOP_HOME}/etc/hadoop/hdfs-site.xml
 
      # Format HDFS
-     ssh hadoop@localhost "hdfs namenode -format"
+     ssh hadoop@localhost "$HADOOP_HOME/bin/hdfs namenode -format"
 
      # Start HDFS     
      ssh hadoop@localhost "${HADOOP_HOME}/sbin/start-dfs.sh"
