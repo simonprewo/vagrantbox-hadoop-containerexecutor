@@ -203,6 +203,11 @@ Vagrant.configure("2") do |config|
      # Start Yarn
      
      ssh hadoop@localhost "${HADOOP_HOME}/sbin/start-yarn.sh"
+
+     # Add an example to run yarn-docker-job on hadoop
+     echo "export YARN_DOCKER_EXAMPLE=\"yarn jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-2.9.1.jar -shell_env YARN_CONTAINER_RUNTIME_TYPE=docker -shell_env YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=centos -shell_command \\\"sleep 90\\\"  -jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-2.9.1.jar -num_containers 1\"" >> /etc/profile.d/hadoop.sh
      
+     echo "Provisioning done. To start with qick example execute $YARN_DOCKER_EXAMPLE in the VM under user hadoop"
+
    SHELL
 end
