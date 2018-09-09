@@ -37,8 +37,10 @@ Vagrant.configure("2") do |config|
      chmod 0600 ~/.ssh/authorized_keys
      ssh -oStrictHostKeyChecking=no localhost ls
      ssh -oStrictHostKeyChecking=no 0.0.0.0 ls
+
+     # Add User for Hadoop, allow passwordless SSH as it is needed for Hadoop and add it to the docker group
      useradd -m hadoop
-     mkdir /home/hadoop/.ssh && chown hadoop /home/yarn/.ssh
+     mkdir /home/hadoop/.ssh
      cat ~/.ssh/id_rsa.pub >> /home/hadoop/.ssh/authorized_keys
      cat ~/.ssh/id_rsa >> /home/hadoop/.ssh/id_rsa
      chmod 0600 /home/hadoop/.ssh/*
@@ -53,11 +55,14 @@ Vagrant.configure("2") do |config|
      echo "export PATH=\$PATH:/usr/local/hadoop/bin" >> /etc/profile.d/hadoop.sh
      source /etc/profile.d/hadoop.sh
  
+     # Download Hadoop Binaries, extract them and create proper directory structure
      wget ftp://ftp.fu-berlin.de/unix/www/apache/hadoop/common/hadoop-2.9.1/hadoop-2.9.1.tar.gz || wget ftp://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/hadoop/common/hadoop-2.9.1/hadoop-2.9.1.tar.gz
      tar -xzvf hadoop-2.9.1.tar.gz
      sudo mv hadoop-2.9.1 /usr/local/hadoop
      echo "export JAVA_HOME=\$(readlink -f /usr/bin/java | sed \"s:bin/java::\")" >>  ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
-     chown hadoop -R ${HADOOP_HOME}
+     chown -R root:hadoop ${HADOOP_HOME} && chmod -R o= ${HADOOP_HOME} && sudo chmod u+s /usr/local/hadoop/bin/container-executor
+     mkdir ${HADOOP_HOME}/logs && chown root:hadoop ${HADOOP_HOME}/logs && chmod ug=rwx,o= ${HADOOP_HOME}/logs
+     mkdir -p /var/hadoop/yarn/{local-dir,log-dir} && chown hadoop:hadoop /var/hadoop/yarn/{local-dir,log-dir}
 
      # Configure HDFS
      echo "<configuration>" > ${HADOOP_HOME}/etc/hadoop/core-site.xml
@@ -185,6 +190,15 @@ Vagrant.configure("2") do |config|
      echo "  </property>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
 
      echo "</configuration>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
+
+     # Configure Container Executor for Docker
+     sed -i '/yarn.nodemanager.linux-container-executor.group=/c\yarn.nodemanager.linux-container-executor.group=hadoop' $HADOOP_HOME/etc/hadoop/container-executor.cfg
+     echo "[docker]" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
+     echo "  module.enabled=true" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
+     echo "  docker.allowed.capabilities=SYS_CHROOT,MKNOD,SETFCAP,SETPCAP,FSETID,CHOWN,AUDIT_WRITE,SETGID,NET_RAW,FOWNER,SETUID,DAC_OVERRIDE,KILL,NET_BIND_SERVICE" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
+     echo "  docker.allowed.networks=bridge,host,none" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
+     echo "  docker.allowed.ro-mounts=/sys/fs/cgroup" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
+     echo "  docker.allowed.rw-mounts=/usr/local/hadoop/,/var/hadoop/yarn/local-dir,/var/hadoop/yarn/log-dir,/tmp/hadoop-hadoop/" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
 
      # Start Yarn
      
