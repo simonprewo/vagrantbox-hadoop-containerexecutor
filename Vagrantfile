@@ -56,9 +56,9 @@ Vagrant.configure("2") do |config|
      source /etc/profile.d/hadoop.sh
  
      # Download Hadoop Binaries, extract them and create proper directory structure
-     wget ftp://ftp.fu-berlin.de/unix/www/apache/hadoop/common/hadoop-2.9.1/hadoop-2.9.1.tar.gz || wget ftp://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/hadoop/common/hadoop-2.9.1/hadoop-2.9.1.tar.gz
-     tar -xzvf hadoop-2.9.1.tar.gz
-     sudo mv hadoop-2.9.1 /usr/local/hadoop
+     wget ftp://ftp.fu-berlin.de/unix/www/apache/hadoop/common/hadoop-3.1.1/hadoop-3.1.1.tar.gz || wget ftp://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/hadoop/common/hadoop-3.1.1/hadoop-3.1.1.tar.gz
+     tar -xzvf hadoop-3.1.1.tar.gz
+     sudo mv hadoop-3.1.1 /usr/local/hadoop
      echo "export JAVA_HOME=\$(readlink -f /usr/bin/java | sed \"s:bin/java::\")" >>  ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
      chown -R root:hadoop ${HADOOP_HOME} && chmod -R o= ${HADOOP_HOME} && sudo chmod u+s /usr/local/hadoop/bin/container-executor
      mkdir ${HADOOP_HOME}/logs && chown root:hadoop ${HADOOP_HOME}/logs && chmod ug=rwx,o= ${HADOOP_HOME}/logs
@@ -193,6 +193,7 @@ Vagrant.configure("2") do |config|
 
      # Configure Container Executor for Docker
      sed -i '/yarn.nodemanager.linux-container-executor.group=/c\yarn.nodemanager.linux-container-executor.group=hadoop' $HADOOP_HOME/etc/hadoop/container-executor.cfg
+     echo "" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg #Create newline
      echo "[docker]" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
      echo "  module.enabled=true" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
      echo "  docker.allowed.capabilities=SYS_CHROOT,MKNOD,SETFCAP,SETPCAP,FSETID,CHOWN,AUDIT_WRITE,SETGID,NET_RAW,FOWNER,SETUID,DAC_OVERRIDE,KILL,NET_BIND_SERVICE" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
@@ -201,13 +202,12 @@ Vagrant.configure("2") do |config|
      echo "  docker.allowed.rw-mounts=/usr/local/hadoop/,/var/hadoop/yarn/local-dir,/var/hadoop/yarn/log-dir,/tmp/hadoop-hadoop/" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
 
      # Start Yarn
-     
      ssh hadoop@localhost "${HADOOP_HOME}/sbin/start-yarn.sh"
 
      # Add an example to run yarn-docker-job on hadoop
-     echo 'export YARN_DOCKER_EXAMPLE="yarn jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-2.9.1.jar -shell_env YARN_CONTAINER_RUNTIME_TYPE=docker -shell_env YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=centos -shell_command \\"sleep 90\\"  -jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-2.9.1.jar -num_containers 1"' >> /etc/profile.d/hadoop.sh
+     echo 'export YARN_DOCKER_EXAMPLE="yarn jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -shell_env YARN_CONTAINER_RUNTIME_TYPE=docker -shell_env YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=centos -shell_command \\"sleep 90\\"  -jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -num_containers 1"' >> /etc/profile.d/hadoop.sh
      
-     echo "Provisioning done. To start with qick example execute $YARN_DOCKER_EXAMPLE in the VM under user hadoop"
+     echo "Provisioning done. To start with qick example execute \$YARN_DOCKER_EXAMPLE in the VM under user hadoop"
 
    SHELL
 end
