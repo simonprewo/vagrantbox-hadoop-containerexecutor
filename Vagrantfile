@@ -31,6 +31,10 @@ Vagrant.configure("2") do |config|
      apt-get install -y default-jdk
      apt-get install -y docker.io
 
+     # Pull Docker image centos and ubuntu as background process
+     # And tag them as a result of discuession in https://jira.apache.org/jira/browse/YARN-8783
+     docker pull centos && docker pull ubuntu && docker tag centos local/centos && docker tag ubuntu local/ubuntu  &
+
      # Setup Passwordless SSH to localhost
      ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
      cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
@@ -200,12 +204,14 @@ Vagrant.configure("2") do |config|
      echo "  docker.allowed.networks=bridge,host,none" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
      echo "  docker.allowed.ro-mounts=/sys/fs/cgroup" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
      echo "  docker.allowed.rw-mounts=/usr/local/hadoop/,/var/hadoop/yarn/local-dir,/var/hadoop/yarn/log-dir,/tmp/hadoop-hadoop/" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
+     echo "  docker.trusted.registries=local" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
+     echo "  docker.privileged-containers.enabled=true" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
 
      # Start Yarn
      ssh hadoop@localhost "${HADOOP_HOME}/sbin/start-yarn.sh"
 
      # Add an example to run yarn-docker-job on hadoop
-     echo 'export YARN_DOCKER_EXAMPLE="yarn jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -shell_env YARN_CONTAINER_RUNTIME_TYPE=docker -shell_env YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=centos -shell_command \\"sleep 90\\"  -jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -num_containers 1"' >> /etc/profile.d/hadoop.sh
+     echo 'export YARN_DOCKER_EXAMPLE="yarn jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -shell_env YARN_CONTAINER_RUNTIME_TYPE=docker -shell_env YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=local/centos -shell_command true -jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -num_containers 1"' >> /etc/profile.d/hadoop.sh
      
      echo "Provisioning done. To start with qick example execute \$YARN_DOCKER_EXAMPLE in the VM under user hadoop"
 
