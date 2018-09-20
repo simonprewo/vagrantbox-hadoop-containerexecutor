@@ -20,13 +20,18 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider "virtualbox" do |vb|
      # Customize the amount of memory on the VM in our case 2048MB
-     vb.memory = "2048"
+     vb.memory = "3072"
   end
 
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
    config.vm.provision "shell", inline: <<-SHELL
+
+     # Download Spark Binaries as background process
+     wget http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz || wget http://mirror.netcologne.de/apache.org/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz
+     wget ftp://ftp.fu-berlin.de/unix/www/apache/hadoop/common/hadoop-3.1.1/hadoop-3.1.1.tar.gz || wget ftp://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/hadoop/common/hadoop-3.1.1/hadoop-3.1.1.tar.gz &
+
      apt-get update
      apt-get install -y default-jdk
      apt-get install -y docker.io
@@ -56,11 +61,11 @@ Vagrant.configure("2") do |config|
      
      # Configure Environment Variable of Hadoop
      echo "export HADOOP_HOME=\"/usr/local/hadoop\"" > /etc/profile.d/hadoop.sh
-     echo "export PATH=\$PATH:/usr/local/hadoop/bin" >> /etc/profile.d/hadoop.sh
+     echo 'export PATH=$PATH:/usr/local/hadoop/bin' >> /etc/profile.d/hadoop.sh
      source /etc/profile.d/hadoop.sh
  
      # Download Hadoop Binaries, extract them and create proper directory structure
-     wget ftp://ftp.fu-berlin.de/unix/www/apache/hadoop/common/hadoop-3.1.1/hadoop-3.1.1.tar.gz || wget ftp://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/hadoop/common/hadoop-3.1.1/hadoop-3.1.1.tar.gz
+     while [ ! -f hadoop-3.1.1.tar.gz ]; do   sleep 5; done
      tar -xzvf hadoop-3.1.1.tar.gz
      sudo mv hadoop-3.1.1 /usr/local/hadoop
      echo "export JAVA_HOME=\$(readlink -f /usr/bin/java | sed \"s:bin/java::\")" >>  ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
@@ -193,6 +198,16 @@ Vagrant.configure("2") do |config|
      echo "    </description>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
      echo "  </property>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
 
+     echo "  <property>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
+     echo "    <name>yarn.scheduler.minimum-allocation-mb</name>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
+     echo "    <value>512</value>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
+     echo "  </property>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
+
+     echo "  <property>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
+     echo "    <name>yarn.nodemanager.vmem-pmem-ratio</name>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
+     echo "    <value>4.2</value>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
+     echo "  </property>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
+
      echo "</configuration>" >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
 
      # Configure Container Executor for Docker
@@ -212,6 +227,17 @@ Vagrant.configure("2") do |config|
 
      # Add an example to run yarn-docker-job on hadoop
      echo 'yarn jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -shell_env YARN_CONTAINER_RUNTIME_TYPE=docker -shell_env YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=local/centos -shell_command "sleep 50" -jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -num_containers 1' >> /home/hadoop/test.sh
+
+     # Install Spark
+     tar -xvf spark-2.3.1-bin-hadoop2.7.tgz
+     mv spark-2.3.1-bin-hadoop2.7 /usr/local/spark
+     # Configure Environment Variable for Spark
+     echo "export SPARK_HOME=\"/usr/local/spark\"" > /etc/profile.d/spark.sh
+     echo 'export PATH=$PATH:/usr/local/spark/bin' >> /etc/profile.d/spark.sh
+     echo "export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop" >> /etc/profile.d/spark.sh
+     echo "export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH" >> /etc/profile.d/spark.sh
+
+     source /etc/profile.d/spark.sh
 
      echo "Provisioning done. To start with qick example execute /home/hadoop/test.sh in the VM under user hadoop"
 
