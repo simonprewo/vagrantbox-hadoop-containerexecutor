@@ -37,8 +37,9 @@ Vagrant.configure("2") do |config|
      apt-get install -y docker.io
 
      # Pull Docker image centos and ubuntu as background process
+     # And create image 16.04 ubuntu java image with local/docker
      # And tag them as a result of discuession in https://jira.apache.org/jira/browse/YARN-8783
-     docker pull centos && docker pull ubuntu && docker tag centos local/centos && docker tag ubuntu local/ubuntu  &
+     docker pull centos && docker pull ubuntu && docker tag centos local/centos && docker tag ubuntu local/ubuntu && echo -e "FROM ubuntu:16.04 \nRUN apt-get update\nRUN apt-get install -y default-jdk r-base" | docker build -t local/java - &
 
      # Setup Passwordless SSH to localhost
      ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
@@ -218,7 +219,7 @@ Vagrant.configure("2") do |config|
      echo "  docker.allowed.capabilities=SYS_CHROOT,MKNOD,SETFCAP,SETPCAP,FSETID,CHOWN,AUDIT_WRITE,SETGID,NET_RAW,FOWNER,SETUID,DAC_OVERRIDE,KILL,NET_BIND_SERVICE" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
      echo "  docker.allowed.networks=bridge,host,none" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
      echo "  docker.allowed.ro-mounts=/sys/fs/cgroup" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
-     echo "  docker.allowed.rw-mounts=/usr/local/hadoop/,/var/hadoop/yarn/local-dir,/var/hadoop/yarn/log-dir,/tmp/hadoop-hadoop/" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
+     echo "  docker.allowed.rw-mounts=/usr/local/hadoop/,/var/hadoop/yarn/local-dir,/var/hadoop/yarn/log-dir,/tmp/hadoop-hadoop/,/etc/passwd" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
      echo "  docker.trusted.registries=local" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
      echo "  docker.privileged-containers.enabled=true" >> $HADOOP_HOME/etc/hadoop/container-executor.cfg
 
@@ -226,7 +227,7 @@ Vagrant.configure("2") do |config|
      ssh hadoop@localhost "${HADOOP_HOME}/sbin/start-yarn.sh"
 
      # Add an example to run yarn-docker-job on hadoop
-     echo 'yarn jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -shell_env YARN_CONTAINER_RUNTIME_TYPE=docker -shell_env YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=local/centos -shell_command "sleep 50" -jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -num_containers 1' >> /home/hadoop/test.sh
+     echo 'yarn jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -shell_env YARN_CONTAINER_RUNTIME_TYPE=docker -shell_env YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=local/centos -shell_command "sleep 50" -jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -num_containers 1' >> /home/hadoop/test_distributed_shell.sh
 
      # Install Spark
      tar -xvf spark-2.3.1-bin-hadoop2.7.tgz
@@ -236,6 +237,9 @@ Vagrant.configure("2") do |config|
      echo 'export PATH=$PATH:/usr/local/spark/bin' >> /etc/profile.d/spark.sh
      echo "export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop" >> /etc/profile.d/spark.sh
      echo "export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH" >> /etc/profile.d/spark.sh
+
+     # Add an example for spark
+     echo 'spark-shell --master yarn --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_TYPE=docker --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=local/java --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS=/etc/passwd:/etc/passwd:ro' >> /home/hadoop/test_sparkshell.sh
 
      source /etc/profile.d/spark.sh
 
