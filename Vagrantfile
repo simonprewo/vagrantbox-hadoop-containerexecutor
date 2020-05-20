@@ -29,8 +29,8 @@ Vagrant.configure("2") do |config|
    config.vm.provision "shell", inline: <<-SHELL
 
      # Download Spark Binaries as background process
-     wget http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz || wget http://mirror.netcologne.de/apache.org/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz
-     wget ftp://ftp.fu-berlin.de/unix/www/apache/hadoop/common/hadoop-3.1.1/hadoop-3.1.1.tar.gz || wget ftp://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/hadoop/common/hadoop-3.1.1/hadoop-3.1.1.tar.gz &
+     wget http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/spark/spark-2.3.4/spark-2.3.4-bin-hadoop2.7.tgz || wget http://mirror.netcologne.de/apache.org/spark/spark-2.3.4/spark-2.3.4-bin-hadoop2.7.tgz
+     wget ftp://ftp.fu-berlin.de/unix/www/apache/hadoop/common/hadoop-3.1.3/hadoop-3.1.3.tar.gz || wget ftp://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/hadoop/common/hadoop-3.1.3/hadoop-3.1.3.tar.gz &
 
      apt-get update
      apt-get install -y default-jdk
@@ -66,9 +66,9 @@ Vagrant.configure("2") do |config|
      source /etc/profile.d/hadoop.sh
  
      # Download Hadoop Binaries, extract them and create proper directory structure
-     while [ ! -f hadoop-3.1.1.tar.gz ]; do   sleep 5; done
-     tar -xzvf hadoop-3.1.1.tar.gz
-     sudo mv hadoop-3.1.1 /usr/local/hadoop
+     while [ ! -f hadoop-3.1.3.tar.gz ]; do   sleep 5; done
+     tar -xzvf hadoop-3.1.3.tar.gz
+     sudo mv hadoop-3.1.3 /usr/local/hadoop
      echo "export JAVA_HOME=\$(readlink -f /usr/bin/java | sed \"s:bin/java::\")" >>  ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
      chown -R root:hadoop ${HADOOP_HOME} && chmod -R o= ${HADOOP_HOME} && sudo chmod u+s /usr/local/hadoop/bin/container-executor
      mkdir ${HADOOP_HOME}/logs && chown root:hadoop ${HADOOP_HOME}/logs && chmod ug=rwx,o= ${HADOOP_HOME}/logs
@@ -227,11 +227,11 @@ Vagrant.configure("2") do |config|
      ssh hadoop@localhost "${HADOOP_HOME}/sbin/start-yarn.sh"
 
      # Add an example to run yarn-docker-job on hadoop
-     echo 'yarn jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -shell_env YARN_CONTAINER_RUNTIME_TYPE=docker -shell_env YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=local/centos -shell_command "sleep 50" -jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.1.jar -num_containers 1' >> /home/hadoop/test_distributed_shell.sh
+     echo 'yarn jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.3.jar -shell_env YARN_CONTAINER_RUNTIME_TYPE=docker -shell_env YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=local/centos -shell_command "sleep 50" -jar /usr/local/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-3.1.3.jar -num_containers 1' >> /home/hadoop/test_distributed_shell.sh
 
      # Install Spark
-     tar -xvf spark-2.3.1-bin-hadoop2.7.tgz
-     mv spark-2.3.1-bin-hadoop2.7 /usr/local/spark
+     tar -xvf spark-2.3.4-bin-hadoop2.7.tgz
+     mv spark-2.3.4-bin-hadoop2.7 /usr/local/spark
      # Configure Environment Variable for Spark
      echo "export SPARK_HOME=\"/usr/local/spark\"" > /etc/profile.d/spark.sh
      echo 'export PATH=$PATH:/usr/local/spark/bin' >> /etc/profile.d/spark.sh
